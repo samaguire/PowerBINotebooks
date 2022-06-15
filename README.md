@@ -8,7 +8,7 @@ A collection (though just one at this stage) of useful [.Net Interactive Noteboo
 
 Official installation instructions can be found [here](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.dotnet-interactive-vscode).
 
-**Quick steps**
+## Quick steps
 
 1. Install the latest [Visual Studio Code](https://code.visualstudio.com/).
 
@@ -16,8 +16,4 @@ Official installation instructions can be found [here](https://marketplace.visua
 
 3. Install the .NET Interactive Notebooks extension from the [marketplace](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.dotnet-interactive-vscode).
 
-# Notebooks
-
-**Async Refresh**
-
-Uses PowerShell to connect to the Power BI Service and trigger a customised dataset refresh using the Power BI API.
+4. Download notebooks from the latest [release](https://github.com/samaguire/PowerBINotebooks/releases) and open in Visual Studio Code.
