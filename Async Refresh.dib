@@ -25,7 +25,7 @@ else {
 #!markdown
 
 # Set target
-Set the workspace and dataset name for the dataset to be refreshed. "My workspace" can also be used as the workspace name.
+Set the workspace and dataset name for the dataset to be refreshed. This also works with your personal "My workspace".
 
 #!pwsh
 
@@ -77,7 +77,7 @@ Set the refresh options by using a pre-defined collection or by setting custom v
 #!markdown
 
 ## Apply refresh policy
-Applies incremental refresh policy; updating partitions and refreshing new partitions.
+Applies incremental refresh policy; updating partition structure and getting data for new partitions.
 
 #!pwsh
 
@@ -86,7 +86,7 @@ $commitMode = "transactional"
 $maxParallelism = $null
 $retryCount = $null
 $applyRefreshPolicy = "true"
-$effectiveDate = (Get-Date -Format yyyy-MM-ddTHH:mm:ss.ffffffZ).ToString()
+$effectiveDate = (Get-Date -Format yyyy-MM-ddTHH:mm:ss.ffffffZ).ToString() # current local date time as if it was timezone UTC+0, which is the timezone used by Power BI Service
 $objects = $null
 
 #!markdown
@@ -111,7 +111,7 @@ Specify custom refresh parameters and utilise advanced features.
 
 #!pwsh
 
-$currentDateTime = (Get-Date -Format yyyy-MM-ddTHH:mm:ss.ffffffZ).ToString() # current local date time as if timezone UTC+0 which is the timezone used by Power BI Service
+$currentDateTime = (Get-Date -Format yyyy-MM-ddTHH:mm:ss.ffffffZ).ToString() # current local date time as if it was timezone UTC+0, which is the timezone used by Power BI Service
 
 $type = "full"                      # full, clearValues, calculate, dataOnly, [automatic], defragment
 $commitMode = "partialBatch"        # [transactional], partialBatch
@@ -134,7 +134,7 @@ $objects = @"
     ]
   }
 }
-"@                                  # Tabular Editor Sripted TMSL; note that only table and partition objects will be used
+"@                                  # Tabular Editor scripted TMSL; note that only table and partition objects will be used
 
 #!markdown
 
