@@ -10,7 +10,7 @@ If you're unfamiliar with .Net Interactive Notebooks, be sure to checkout the VS
 
 Official installation instructions can be found [here](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.dotnet-interactive-vscode).
 
-Open this repo in Visual Studio Code / Azure Data Studio will prompt to install the .Net Interactive Notebooks extension if not already installed.
+Opening this repo in Visual Studio Code / Azure Data Studio will prompt to install the .Net Interactive Notebooks extension if not already installed.
 
 ## Quick steps Visual Studio Code
 
