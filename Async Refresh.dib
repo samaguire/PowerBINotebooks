@@ -10,21 +10,36 @@
 
 #!markdown
 
-# Get PowerShell Modules
+# Environment
+
+#!markdown
+
+## Get PowerShell Modules
+
+#!markdown
+
 Installs or updates the the PowerShell Power BI Cmdlets.
 
 #!pwsh
 
-if (Get-Module -ListAvailable -Name MicrosoftPowerBIMgmt) {
+$localModule = Get-Module -ListAvailable -Name MicrosoftPowerBIMgmt
+
+if ($localModule) {
     Update-Module -Name MicrosoftPowerBIMgmt
 } 
 else {
-    Install-Module -Name MicrosoftPowerBIMgmt
+    Install-Module -Name MicrosoftPowerBIMgmt -Scope CurrentUser -Force
 }
+
+$localModule = Get-Module -ListAvailable -Name MicrosoftPowerBIMgmt
+$localModule
 
 #!markdown
 
-# Set target
+## Set target
+
+#!markdown
+
 Set the workspace and dataset name for the dataset to be refreshed. This also works with your personal "My workspace".
 
 #!pwsh
@@ -35,15 +50,14 @@ $datasetName = "My dataset"
 #!markdown
 
 # Connect
+
+#!markdown
+
 Connects to the service and gets the GUID for the workspace (if not "My workspace") and the dataset.
 
 #!pwsh
 
 Connect-PowerBIServiceAccount
-
-$groupId = $null
-$groupUrlPart = $null
-$datasetId = $null
 
 if ($workspaceName.ToLower() -eq "My workspace".ToLower()) {
     $datasetId = (Get-PowerBIDataset -Scope Organization -Name $datasetName)[0].Id
@@ -53,30 +67,25 @@ if ($workspaceName.ToLower() -eq "My workspace".ToLower()) {
     $datasetId = (Get-PowerBIDataset -Scope Organization -Name $datasetName -WorkspaceId $groupId)[0].Id
 }
 
-$collectionWithItems = New-Object System.Collections.ArrayList
-
-$temp = New-Object System.Object
-$temp | Add-Member -MemberType NoteProperty -Name "Object" -Value "Workspace"
-$temp | Add-Member -MemberType NoteProperty -Name "Id" -Value $groupId
-$temp | Add-Member -MemberType NoteProperty -Name "Name" -Value $workspaceName
-$collectionWithItems.Add($temp) | Out-Null
-
-$temp = New-Object System.Object
-$temp | Add-Member -MemberType NoteProperty -Name "Object" -Value "Dataset"
-$temp | Add-Member -MemberType NoteProperty -Name "Id" -Value $datasetId
-$temp | Add-Member -MemberType NoteProperty -Name "Name" -Value $datasetName
-$collectionWithItems.Add($temp) | Out-Null
-
-$collectionWithItems
+[System.Collections.Generic.List[object]]@(
+    [pscustomobject]@{Object = "Workspace"; Id = $groupId; Name = $workspaceName}
+    [pscustomobject]@{Object = "Dataset"; Id = $datasetId; Name = $datasetName}
+)
 
 #!markdown
 
 # Parameters
+
+#!markdown
+
 Set the refresh options by using a pre-defined collection or by setting custom values. Refer to MS documentation regarding allowed parameter values.
 
 #!markdown
 
 ## Apply refresh policy
+
+#!markdown
+
 Applies incremental refresh policy; updating partition structure and getting data for new partitions.
 
 #!pwsh
@@ -92,6 +101,9 @@ $objects = $null
 #!markdown
 
 ## Full refresh
+
+#!markdown
+
 Refreshes the entire database, including historical partitions.
 
 #!pwsh
@@ -107,6 +119,9 @@ $objects = $null
 #!markdown
 
 ## Custom
+
+#!markdown
+
 Specify custom refresh parameters and utilise advanced features.
 
 #!pwsh
@@ -139,40 +154,35 @@ $objects = @"
 #!markdown
 
 # Create payload
+
+#!markdown
+
 Creates the paylod used in the API call to the service.
 
 #!pwsh
 
-$json =  ConvertFrom-Json '{}'
+$json =  [pscustomobject]@{}
 
-if ( $type ) {
-    $json | Add-Member -NotePropertyName "type" -NotePropertyValue $type
+if ($type) {
+    $json | Add-Member -NotePropertyMembers @{type = $type}
 }
-
-if ( $commitMode ) {
-    $json | Add-Member -NotePropertyName "commitMode" -NotePropertyValue $commitMode
+if ($commitMode) {
+    $json | Add-Member -NotePropertyMembers @{commitMode = $commitMode}
 }
-
-if ( $maxParallelism ) {
-    $json | Add-Member -NotePropertyName "maxParallelism" -NotePropertyValue $maxParallelism
+if ($maxParallelism) {
+    $json | Add-Member -NotePropertyMembers @{maxParallelism = $maxParallelism}
 }
-
-if ( $retryCount ) {
-    $json | Add-Member -NotePropertyName "retryCount" -NotePropertyValue $retryCount
+if ($retryCount) {
+    $json | Add-Member -NotePropertyMembers @{retryCount = $retryCount}
 }
-
-if ( $applyRefreshPolicy ) {
-    $json | Add-Member -NotePropertyName "applyRefreshPolicy" -NotePropertyValue $applyRefreshPolicy
+if ($applyRefreshPolicy) {
+    $json | Add-Member -NotePropertyMembers @{applyRefreshPolicy = $applyRefreshPolicy}
 }
-
-if ( $effectiveDate ) {
-    $json | Add-Member -NotePropertyName "effectiveDate" -NotePropertyValue $effectiveDate
+if ($effectiveDate) {
+    $json | Add-Member -NotePropertyMembers @{effectiveDate = $effectiveDate}
 }
-
-if ( $objects ) {
-    $tmsl = (ConvertFrom-Json $objects).refresh
-    $tmslObjects = $tmsl.objects | Select-Object * -ExcludeProperty "database"
-    $json | Add-Member -NotePropertyName "objects" -NotePropertyValue $tmslObjects
+if ($objects) {
+    $json | Add-Member -NotePropertyMembers @{objects = (ConvertFrom-Json $objects).refresh.objects | Select-Object * -ExcludeProperty "database"}
 }
 
 $bodyJson = ConvertTo-Json $json
@@ -181,22 +191,31 @@ $bodyJson
 #!markdown
 
 # Execute and monitor
+
+#!markdown
+
 Refresh related API calls.
 
 #!markdown
 
 ## Initiate
+
+#!markdown
+
 Trigger a refresh.
 
 #!pwsh
 
 Invoke-PowerBIRestMethod -url "$($groupUrlPart)datasets/$datasetId/refreshes" -Method Post -Body $bodyJson -ContentType "application/json"
 $requestId = (Invoke-PowerBIRestMethod -url "$($groupUrlPart)datasets/$datasetId/refreshes?`$top=1" -Method Get | ConvertFrom-Json).value.requestId
-Write-Host "Request ID : $requestId"
+[pscustomobject]@{'Request ID' = $requestId}
 
 #!markdown
 
 ## Status
+
+#!markdown
+
 Get the refresh status for the last triggered refresh.
 
 #!pwsh
@@ -204,11 +223,14 @@ Get the refresh status for the last triggered refresh.
 # $requestId = (Invoke-PowerBIRestMethod -url "$($groupUrlPart)datasets/$datasetId/refreshes?`$top=1" -Method Get | ConvertFrom-Json).value.requestId
 $body = Invoke-PowerBIRestMethod -url "$($groupUrlPart)datasets/$datasetId/refreshes/$requestId" -Method Get | ConvertFrom-Json
 $body | Select-Object * -ExcludeProperty "objects"
-$body.objects | Where-Object -Property "status" -NE "Completed"
+$body.objects | Where-Object -Property status -NE "Completed"
 
 #!markdown
 
 ## Cancel
+
+#!markdown
+
 Cancel the last triggered refresh.
 
 #!pwsh
@@ -219,11 +241,17 @@ Invoke-PowerBIRestMethod -url "$($groupUrlPart)datasets/$datasetId/refreshes/$re
 #!markdown
 
 # Other
+
+#!markdown
+
 Other useful API calls.
 
 #!markdown
 
 ## Get recent refresh details
+
+#!markdown
+
 Get the summary details for the last 3 refreshes.
 
 #!pwsh
@@ -233,6 +261,9 @@ Get the summary details for the last 3 refreshes.
 #!markdown
 
 ## View error details
+
+#!markdown
+
 View error details for the last run Power BI Cmdlet.
 
 #!pwsh

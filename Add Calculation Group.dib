@@ -1,0 +1,403 @@
+#!markdown
+
+# Microsoft documentation
+
+[Power BI Cmdlets reference | Microsoft Docs](https://docs.microsoft.com/en-us/powershell/power-bi/overview?view=powerbi-ps)
+
+[Analysis Services developer documentation | Microsoft Docs](https://docs.microsoft.com/en-us/analysis-services/analysis-services-developer-documentation?view=asallproducts-allversions)
+
+[.NET API browser | Microsoft Docs](https://docs.microsoft.com/en-us/dotnet/api/?view=analysisservices-dotnet)
+
+#!markdown
+
+# Environment
+
+#!markdown
+
+## Get PowerShell Modules
+
+#!markdown
+
+Installs or updates the the PowerShell Power BI Cmdlets.
+
+#!pwsh
+
+$localModule = Get-Module -ListAvailable -Name MicrosoftPowerBIMgmt
+
+if ($localModule) {
+    Update-Module -Name MicrosoftPowerBIMgmt
+} 
+else {
+    Install-Module -Name MicrosoftPowerBIMgmt -Scope CurrentUser -Force
+}
+
+$localModule = Get-Module -ListAvailable -Name MicrosoftPowerBIMgmt
+$localModule
+
+#!markdown
+
+## Get Analysis Management Objects (AMO) .Net Core
+
+#!markdown
+
+Installs or updates the NuGet package and loads the assemblies.
+
+#!markdown
+
+### Register NuGet package provider
+
+#!pwsh
+
+$localPackageSource = Get-PackageSource -Name nuget.org -ErrorAction SilentlyContinue
+
+if (-not $localPackageSource) {
+    Register-PackageSource -Name nuget.org -Location https://www.nuget.org/api/v2 -ProviderName NuGet
+}
+else {
+    $localPackageSource
+}
+
+#!markdown
+
+### Install NuGet package
+
+#!pwsh
+
+$localPackage = Get-Package -Name Microsoft.AnalysisServices.NetCore.retail.amd64 -ProviderName NuGet -ErrorAction SilentlyContinue
+$remotePackage = Find-Package -Name Microsoft.AnalysisServices.NetCore.retail.amd64 -ProviderName NuGet
+
+if ($remotePackage.Version -ne $localPackage.Version) {
+    Install-Package -Name Microsoft.AnalysisServices.NetCore.retail.amd64 -Scope CurrentUser -SkipDependencies -Force
+}
+else {
+    $localPackage
+}
+
+#!markdown
+
+## Load assemblies
+
+#!pwsh
+
+$sourcePath = Split-Path -Path (Get-Package -Name Microsoft.AnalysisServices.NetCore.retail.amd64).Source
+$sourceFiles = Get-ChildItem -Filter *.dll -LiteralPath (Join-Path -Path $sourcePath -ChildPath "lib\netcoreapp3.0")
+$sourceFiles | ForEach-Object { Add-Type -LiteralPath $_.FullName }
+$sourceFiles
+
+#!markdown
+
+# Connection
+
+#!markdown
+
+## Get Power BI Desktop server addresses
+
+#!pwsh
+
+$processes = Get-Process -Name "PBIDesktop" -ErrorAction SilentlyContinue
+$collection = [System.Collections.Generic.List[object]]::new()
+
+if (-not $processes) {
+    $collection.Add([PSCustomObject]@{'Server Address' = $null; Instance = $null})
+}
+else {
+    foreach ($process in $processes) {
+        $mainWindowTitle = $process.MainWindowTitle
+        $remotePort = (Get-NetTCPConnection -OwningProcess $Process.Id).Where({$_.RemotePort -ne 0})[0].RemotePort
+        $collection.Add([PSCustomObject]@{'Server Address'="localhost:$remotePort"; Instance=$mainWindowTitle})
+    }
+}
+
+$collection
+
+#!markdown
+
+## Set server address
+
+#!markdown
+
+Typically this will be one of the example formats. This also works with your personal "My workspace".
+
+#!pwsh
+
+$serverAddress = "localhost:00000"                                          # Power BI Desktop
+# $serverAddress = "powerbi://api.powerbi.com/v1.0/myorg/My workspace"        # Power BI Service XMLA endpoint
+
+#!markdown
+
+## Get databases
+
+#!pwsh
+
+$serverAddress = $serverAddress.Split("/My workspace")[0]
+$serverType = $serverAddress.Split(":")[0]
+
+if ($serverType -eq "localhost") {
+    $connectionString = "Data Source=$serverAddress;"
+}
+elseif ($serverType -eq "powerbi") {
+    Connect-PowerBIServiceAccount
+    $accessToken = (Get-PowerBIAccessToken -AsString).Split("Bearer ")[1]
+    $connectionString = "Data Source=$serverAddress;Password=$accessToken;"
+}
+else {
+    $connectionString = $null
+}
+
+$server = [Microsoft.AnalysisServices.Tabular.Server]::new()
+$server.Connect($connectionString)
+
+$databases = $server.Databases
+$databases.Where({$_.Name -Like "*"}) | Select-Object -Property ID,Name
+
+#!markdown
+
+## Set database
+
+#!pwsh
+
+$databaseId = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+
+#!markdown
+
+# Modify model
+
+#!markdown
+
+## Get model
+
+#!markdown
+
+Loads/reloads the model from the database.
+
+#!pwsh
+
+$server = [Microsoft.AnalysisServices.Tabular.Server]::new()
+$server.Connect($connectionString)
+
+$model = $server.Databases.Item($databaseId).Model
+$model | Select-Object -Property Server,Database
+
+#!markdown
+
+## Add calculation group (compact)
+
+#!pwsh
+
+($table = [Microsoft.AnalysisServices.Tabular.Table]@{
+    Name = "New Calculation Group"
+    CalculationGroup = [Microsoft.AnalysisServices.Tabular.CalculationGroup]@{
+        Precedence = ($model.Tables.Where({$_.CalculationGroup -ne $null}).CalculationGroup.Precedence | Measure-Object -Maximum).Maximum + 1
+    }
+}) | ForEach-Object {
+    $_.Partitions.Add(
+        [Microsoft.AnalysisServices.Tabular.Partition]@{
+            Name = "Partition"
+            Mode = "Import"
+            Source = [Microsoft.AnalysisServices.Tabular.CalculationGroupSource]::new()
+        }
+    )
+    $_.Columns.Add(
+        [Microsoft.AnalysisServices.Tabular.DataColumn]@{
+            Name = "Name"
+            DataType = "String"
+            SourceColumn = "Name"
+            SortByColumn = ($columnOrdinal = [Microsoft.AnalysisServices.Tabular.DataColumn]@{
+                Name = "Ordinal"
+                DataType = "int64"
+                IsHidden = $true
+                SourceColumn = "Ordinal"
+            })
+        }
+    )
+    $_.Columns.Add($columnOrdinal)
+}
+
+$model | ForEach-Object {
+    $_.DiscourageImplicitMeasures = $true
+    $_.Tables.Add($table)
+}
+
+$result = $model.SaveChanges()
+$result.XmlaResults
+
+#!markdown
+
+## Add calculation group (expanded)
+
+#!markdown
+
+Expanded for learning purposes.
+
+#!markdown
+
+### Create the table
+
+#!pwsh
+
+$maxPrecedence = ($model.Tables.Where({$_.CalculationGroup -ne $null}).CalculationGroup.Precedence | Measure-Object -Maximum).Maximum
+
+$calculationGroup = [Microsoft.AnalysisServices.Tabular.CalculationGroup]@{
+    Precedence = $maxPrecedence + 1
+}
+
+$table = [Microsoft.AnalysisServices.Tabular.Table]@{
+    Name = "New Calculation Group"
+    CalculationGroup = $calculationGroup
+}
+
+$table | Select-Object -Property Name,@{Name='CalculationGroup.Precedence'; Expression={$_.CalculationGroup.Precedence}}
+
+#!markdown
+
+### Create and add a partition to the table
+
+#!pwsh
+
+$calculationGroupSource = [Microsoft.AnalysisServices.Tabular.CalculationGroupSource]::new()
+
+$partition = [Microsoft.AnalysisServices.Tabular.Partition]@{
+    Name = "Partition"
+    Mode = "Import"
+    Source = $calculationGroupSource
+}
+
+$table.Partitions.Add($partition)
+
+$partition | Select-Object -Property Name,Mode,Source
+
+#!markdown
+
+### Create and add columns to the table
+
+#!pwsh
+
+$columnOrdinal = [Microsoft.AnalysisServices.Tabular.DataColumn]@{
+    Name = "Ordinal"
+    DataType = "int64"
+    IsHidden = $true
+    SourceColumn = "Ordinal"
+}
+
+$columnName = [Microsoft.AnalysisServices.Tabular.DataColumn]@{
+    Name = "Name"
+    DataType = "String"
+    SourceColumn = "Name"
+    SortByColumn = $columnOrdinal
+}
+
+$table.Columns.Add($columnName)
+$table.Columns.Add($columnOrdinal)
+
+[System.Collections.Generic.List[object]]@($columnName; $columnOrdinal) | Select-Object -Property Name,DataType,IsHidden,SourceColumn,@{Name='SortByColumn'; Expression={$_.SortByColumn.Name}}
+
+#!markdown
+
+### Add the table to the model
+
+#!pwsh
+
+$model.Tables.Add($table)
+$model.DiscourageImplicitMeasures = $true
+
+$result = $model.SaveChanges()
+$result.XmlaResults
+
+#!markdown
+
+## Remove calculation group
+
+#!pwsh
+
+$calculationGroupName = "New Calculation Group"
+
+$model.Tables.Remove($calculationGroupName)
+# $model.DiscourageImplicitMeasures = $false
+
+$result = $model.SaveChanges()
+$result.XmlaResults
+
+#!markdown
+
+## Add calculation group item
+
+#!markdown
+
+Insert your DAX code between the @" and the "@, for example:
+
+```
+$daxExpression = @"
+CALCULATE(
+    SELECTEDMEASURE(),
+    DATESYTD( 'Date'[Date] )
+)
+"@
+```
+
+#!pwsh
+
+$calculationGroupName = "New Calculation Group"
+
+$daxExpression = @"
+"@
+
+$calculationItem = [Microsoft.AnalysisServices.Tabular.CalculationItem]@{
+    Name = "New Calculation"
+    # Description = ""
+    Expression = $daxExpression
+    # Ordinal = 0
+}
+
+$model.Tables.Item($calculationGroupName).CalculationGroup.CalculationItems.Add($calculationItem)
+
+$result = $model.SaveChanges()
+$result.XmlaResults
+
+#!markdown
+
+## Modify calculation group item
+
+#!markdown
+
+Insert your DAX code between the @" and the "@, for example:
+
+```
+$daxExpression = @"
+CALCULATE(
+    SELECTEDMEASURE(),
+    DATESYTD( 'Date'[Date] )
+)
+"@
+```
+
+#!pwsh
+
+$calculationGroupName = "New Calculation Group"
+$calculationItemName = "New Calculation"
+
+$daxExpression = @"
+"@
+
+$model.Tables.Item($calculationGroupName).CalculationGroup.CalculationItems.Item($calculationItemName) | ForEach-Object {
+    $_.Name = "New Calculation"
+    # $_.Description = ""
+    $_.Expression = $daxExpression
+    # $_.Ordinal = 0
+}
+
+$result = $model.SaveChanges()
+$result.XmlaResults
+
+#!markdown
+
+## Remove calculation group item
+
+#!pwsh
+
+$calculationGroupName = "New Calculation Group"
+$calculationItemName = "New Calculation"
+
+$model.Tables.Item($calculationGroupName).CalculationGroup.CalculationItems.Remove($calculationItemName)
+
+$result = $model.SaveChanges()
+$result.XmlaResults
