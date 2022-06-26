@@ -20,7 +20,7 @@ Opening this repo in Visual Studio Code / Azure Data Studio will prompt to insta
 
 3. Install the .NET Interactive Notebooks extension from the [marketplace](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.dotnet-interactive-vscode).
 
-4. Download notebooks from the latest [release](https://github.com/samaguire/PowerBINotebooks/releases) and open in Visual Studio Code.
+4. Download notebooks from the latest [release](https://github.com/samaguire/PowerBINotebooks/releases/latest) and open in Visual Studio Code.
 
 ## Quick steps Azure Data Studio
 
@@ -30,7 +30,7 @@ Opening this repo in Visual Studio Code / Azure Data Studio will prompt to insta
 
 3. Install the .NET Interactive Notebooks extension from the extension manager in Azure Data Studio.
 
-4. Download notebooks from the latest [release](https://github.com/samaguire/PowerBINotebooks/releases) and open in Azure Data Studio.
+4. Download notebooks from the latest [release](https://github.com/samaguire/PowerBINotebooks/releases/latest) and open in Azure Data Studio.
 
 # More information
 
