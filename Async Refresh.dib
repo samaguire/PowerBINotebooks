@@ -22,17 +22,15 @@ Installs or updates the the PowerShell Power BI Cmdlets.
 
 #!pwsh
 
-$localModule = Get-Module -ListAvailable -Name MicrosoftPowerBIMgmt
+$localModule = Get-Module -Name MicrosoftPowerBIMgmt -ListAvailable -ErrorAction SilentlyContinue
+$remoteModule = Find-Module -Name MicrosoftPowerBIMgmt -Repository PSGallery
 
-if ($localModule) {
-    Update-Module -Name MicrosoftPowerBIMgmt
-} 
-else {
-    Install-Module -Name MicrosoftPowerBIMgmt -Scope CurrentUser -Force
+if ($remoteModule.Version -ne ($localModule.Version | Measure-Object -Maximum).Maximum ) {
+    Install-Module -Name MicrosoftPowerBIMgmt -Repository PSGallery -Scope CurrentUser -SkipPublisherCheck -Force
 }
-
-$localModule = Get-Module -ListAvailable -Name MicrosoftPowerBIMgmt
-$localModule
+else {
+    $localModule
+}
 
 #!markdown
 
