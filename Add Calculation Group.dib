@@ -354,10 +354,14 @@ $calculationGroupName = "New Calculation Group"
 $daxExpression = @"
 "@
 
+$formatStringExpression = @"
+"@
+
 $calculationItem = [Microsoft.AnalysisServices.Tabular.CalculationItem]@{
     Name = "New Calculation"
     # Description = ""
     Expression = $daxExpression
+    # FormatStringDefinition = $formatStringExpression
     # Ordinal = 0
 }
 
@@ -391,10 +395,14 @@ $calculationItemName = "New Calculation"
 $daxExpression = @"
 "@
 
+$formatStringExpression = @"
+"@
+
 $model.Tables.Item($calculationGroupName).CalculationGroup.CalculationItems.Item($calculationItemName) | ForEach-Object {
     $_.Name = "New Calculation"
     # $_.Description = ""
     $_.Expression = $daxExpression
+    # FormatStringDefinition = $formatStringExpression
     # $_.Ordinal = 0
 }
 
