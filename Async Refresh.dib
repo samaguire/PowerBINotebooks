@@ -204,8 +204,8 @@ Trigger a refresh.
 
 #!pwsh
 
-Invoke-PowerBIRestMethod -url "$($groupUrlPart)datasets/$datasetId/refreshes" -Method Post -Body $bodyJson -ContentType "application/json"
-$requestId = (Invoke-PowerBIRestMethod -url "$($groupUrlPart)datasets/$datasetId/refreshes?`$top=1" -Method Get | ConvertFrom-Json).value.requestId
+Invoke-PowerBIRestMethod -Url "$($groupUrlPart)datasets/$datasetId/refreshes" -Method Post -Body $bodyJson -ContentType "application/json"
+$requestId = (Invoke-PowerBIRestMethod -Url "$($groupUrlPart)datasets/$datasetId/refreshes?`$top=1" -Method Get | ConvertFrom-Json).value.requestId
 [pscustomobject]@{'Request ID' = $requestId}
 
 #!markdown
@@ -218,8 +218,8 @@ Get the refresh status for the last triggered refresh.
 
 #!pwsh
 
-# $requestId = (Invoke-PowerBIRestMethod -url "$($groupUrlPart)datasets/$datasetId/refreshes?`$top=1" -Method Get | ConvertFrom-Json).value.requestId
-$body = Invoke-PowerBIRestMethod -url "$($groupUrlPart)datasets/$datasetId/refreshes/$requestId" -Method Get | ConvertFrom-Json
+# $requestId = (Invoke-PowerBIRestMethod -Url "$($groupUrlPart)datasets/$datasetId/refreshes?`$top=1" -Method Get | ConvertFrom-Json).value.requestId
+$body = Invoke-PowerBIRestMethod -Url "$($groupUrlPart)datasets/$datasetId/refreshes/$requestId" -Method Get | ConvertFrom-Json
 $body | Select-Object * -ExcludeProperty "objects"
 $body.objects | Where-Object -Property status -NE "Completed"
 
@@ -233,8 +233,8 @@ Cancel the last triggered refresh.
 
 #!pwsh
 
-# $requestId = (Invoke-PowerBIRestMethod -url "$($groupUrlPart)datasets/$datasetId/refreshes?`$top=1" -Method Get | ConvertFrom-Json).value.requestId
-Invoke-PowerBIRestMethod -url "$($groupUrlPart)datasets/$datasetId/refreshes/$requestId" -Method Delete
+# $requestId = (Invoke-PowerBIRestMethod -Url "$($groupUrlPart)datasets/$datasetId/refreshes?`$top=1" -Method Get | ConvertFrom-Json).value.requestId
+Invoke-PowerBIRestMethod -Url "$($groupUrlPart)datasets/$datasetId/refreshes/$requestId" -Method Delete
 
 #!markdown
 
@@ -254,7 +254,7 @@ Get the summary details for the last 3 refreshes.
 
 #!pwsh
 
-(Invoke-PowerBIRestMethod -url "$($groupUrlPart)datasets/$datasetId/refreshes?`$top=3" -Method Get | ConvertFrom-Json).value
+(Invoke-PowerBIRestMethod -Url "$($groupUrlPart)datasets/$datasetId/refreshes?`$top=3" -Method Get | ConvertFrom-Json).value
 
 #!markdown
 
