@@ -127,7 +127,7 @@ Specify custom refresh parameters and utilise advanced features.
 $currentDateTime = (Get-Date -Format yyyy-MM-ddTHH:mm:ss.ffffffZ).ToString() # current local date time as if it was timezone UTC+0, which is the timezone used by Power BI Service
 
 $type = "full"                      # full, clearValues, calculate, dataOnly, [automatic], defragment
-$commitMode = "partialBatch"        # [transactional], partialBatch
+$commitMode = "transactional"        # [transactional], partialBatch
 $maxParallelism = $null             # [10]
 $retryCount = $null                 # [0]
 $applyRefreshPolicy = "false"       # [true], false
