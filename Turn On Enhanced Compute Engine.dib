@@ -1,0 +1,86 @@
+#!markdown
+
+# Microsoft documentation
+
+[Power BI Cmdlets reference | Microsoft Docs](https://docs.microsoft.com/en-us/powershell/power-bi/overview?view=powerbi-ps)
+
+[Power BI REST APIs for embedded analytics and automation - Power BI REST API | Microsoft Docs](https://docs.microsoft.com/en-us/rest/api/power-bi/)
+
+#!markdown
+
+# Environment
+
+#!markdown
+
+## Get PowerShell Modules
+
+#!markdown
+
+Installs or updates the the PowerShell Power BI Cmdlets.
+
+#!pwsh
+
+$localModule = Get-Module -Name MicrosoftPowerBIMgmt -ListAvailable -ErrorAction SilentlyContinue
+$remoteModule = Find-Module -Name MicrosoftPowerBIMgmt -Repository PSGallery
+
+if ($remoteModule.Version -ne ($localModule.Version | Measure-Object -Maximum).Maximum ) {
+    Install-Module -Name MicrosoftPowerBIMgmt -Repository PSGallery -Scope CurrentUser -SkipPublisherCheck -Force
+}
+else {
+    $localModule
+}
+
+#!markdown
+
+## Set target
+
+#!markdown
+
+Set the workspace and dataset name for the dataset to be refreshed. This also works with your personal "My workspace".
+
+#!pwsh
+
+$workspaceName = "My workspace"
+
+#!markdown
+
+# Connect
+
+#!markdown
+
+Connects to the service and gets the GUID for the workspace (if not "My workspace") and the dataset.
+
+#!pwsh
+
+Connect-PowerBIServiceAccount
+
+$groupId = (Get-PowerBIWorkspace -Scope Organization -Name $workspaceName)[0].Id
+$groupUrlPart = "groups/$groupId/"
+
+[pscustomobject]@{Object = "Workspace"; Id = $groupId; Name = $workspaceName}
+
+#!markdown
+
+# Execute and monitor
+
+#!markdown
+
+## Update
+
+#!markdown
+
+Update Dataflow configuration for Workspace Dataflows.
+
+#!pwsh
+
+$dataflows = ((Invoke-PowerBIRestMethod -Url "$($groupUrlPart)dataflows" -Method Get) | ConvertFrom-Json).value.objectId
+
+$dataflows | Foreach-Object -ThrottleLimit 5 -Parallel {
+
+    $bodyJson = '{"computeEngineBehavior": "computeOn"}'
+    Invoke-PowerBIRestMethod -Url "$($using:groupUrlPart)dataflows/$($_)" -Method Patch -Body $bodyJson -ContentType "application/json" -ErrorAction SilentlyContinue | Out-Null
+    if($Error[0]) {
+        [pscustomobject]@{"Workspace ID" = $using:groupId; "Dataflow ID" = $_; "Error Message" = $Error[0].ToString()}
+    }
+
+}
