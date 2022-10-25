@@ -180,7 +180,7 @@ if ($effectiveDate) {
     $json | Add-Member -NotePropertyMembers @{effectiveDate = $effectiveDate}
 }
 if ($objects) {
-    $json | Add-Member -NotePropertyMembers @{objects = (ConvertFrom-Json $objects).refresh.objects | Select-Object * -ExcludeProperty "database"}
+    $json | Add-Member -NotePropertyMembers @{objects = @((ConvertFrom-Json $objects).refresh.objects | Select-Object * -ExcludeProperty "database")}
 }
 
 $bodyJson = ConvertTo-Json $json
