@@ -38,7 +38,7 @@ $collection
 
 #!markdown
 
-Generate connection string from ***user input***
+Generate connection string from ***user input window above***
 
 #!csharp
 
@@ -76,12 +76,10 @@ Get Power BI Service access token
 Connect-PowerBIServiceAccount
 
 $accessToken = (Get-PowerBIAccessToken -AsString).Split("Bearer ")[1]
-# $connectionString = "Provider=MSOLAP;Data Source=powerbi://api.powerbi.com/v1.0/myorg/Centralised Datasets [Development];initial catalog=Calendar Tables;"
-# $connectionString = $connectionString + "Password=$accessToken;"
 
 #!markdown
 
-Generate connection string from ***user input***
+Generate connection string from ***user input window above***
 
 #!csharp
 
@@ -93,7 +91,7 @@ string datasetName = await GetInputAsync("Enter dataset name");
 if (workspaceName.Trim().ToLower() == "my workspace") { workspaceName = ""; } else { workspaceName = "/" + workspaceName; }
 string connectionString = $"Provider=MSOLAP;Data Source=powerbi://api.powerbi.com/v1.0/myorg{workspaceName.Trim()};initial catalog={datasetName.Trim()};Password={accessToken};";
 
-connectionString
+connectionString.Replace(accessToken, (accessToken.Substring(0, 15) + "..." + accessToken.Substring(accessToken.Length - 15, 15)))
 
 #!markdown
 
@@ -194,10 +192,10 @@ Download (if required) and load assemblies into the environment
 
 #!fsharp
 
-#r "nuget: SandDance.InteractiveExtension, 1.0.73"
-#r "nuget: DataView.InteractiveExtension, 1.0.73"
 #r "nuget: Microsoft.Data.Analysis, 0.20.0"
 #r "nuget: Microsoft.ML, 2.0.0"
+#r "nuget: DataView.InteractiveExtension, 1.0.73"
+#r "nuget: SandDance.InteractiveExtension, 1.0.73"
 
 #!markdown
 
@@ -206,7 +204,6 @@ Add namespaces into the environment
 #!fsharp
 
 open Microsoft.Data.Analysis
-open System.Collections.Generic
 open Microsoft.ML
 open SandDance.InteractiveExtension
 
