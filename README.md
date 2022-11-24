@@ -1,6 +1,6 @@
 # Power BI Notebooks
 
-A collection (though just one at this stage) of useful [.Net Interactive Notebooks](https://github.com/dotnet/interactive#notebooks-with-net) to do Power BI related stuff.
+A collection of useful [.Net Interactive Notebooks](https://github.com/dotnet/interactive#notebooks-with-net) to do Power BI related stuff.
 
 If you're unfamiliar with .Net Interactive Notebooks, be sure to checkout the VS Code Livestreams session [here](https://docs.microsoft.com/en-us/shows/vs-code-livestreams/net-interactive-notebooks-with-csharp-fsharp). It is a fantastic overview on the functionality available in these notebooks.
 
