@@ -61,7 +61,7 @@ Install/Update PowerShell Power BI Cmdlets
 $localModule = Get-Module -Name MicrosoftPowerBIMgmt -ListAvailable -ErrorAction SilentlyContinue
 $remoteModule = Find-Module -Name MicrosoftPowerBIMgmt -Repository PSGallery
 
-if ($remoteModule.Version -ne [string]($localModule.Version | Measure-Object -Maximum).Maximum) {
+if ($remoteModule.Version -ne ($localModule.Version)[0]) {
     Install-Module -Name MicrosoftPowerBIMgmt -Repository PSGallery -Scope CurrentUser -SkipPublisherCheck -Force
 }
 
