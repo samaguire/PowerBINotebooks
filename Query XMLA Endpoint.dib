@@ -1,3 +1,7 @@
+#!meta
+
+{"kernelInfo":{"defaultKernelName":"csharp","items":[{"name":"csharp","aliases":["c#","C#"],"languageName":"C#"},{"name":".NET","aliases":[]},{"name":"fsharp","aliases":["f#","F#"],"languageName":"F#"},{"name":"html","aliases":[],"languageName":"HTML"},{"name":"javascript","aliases":["js"],"languageName":"JavaScript"},{"name":"kql","aliases":[],"languageName":"KQL"},{"name":"mermaid","aliases":[],"languageName":"Mermaid"},{"name":"pwsh","aliases":["powershell"],"languageName":"PowerShell"},{"name":"sql","aliases":[],"languageName":"SQL"},{"name":"value","aliases":[]},{"name":"vscode","aliases":["frontend"]},{"name":"webview","aliases":[]}]}}
+
 #!markdown
 
 # Microsoft documentation
@@ -54,6 +58,67 @@ connectionString
 
 #!markdown
 
+## Using CSharp
+
+#!markdown
+
+Download (if required) and load assemblies into the environment
+
+#!csharp
+
+#r "nuget: Microsoft.Identity.Client"
+
+#!markdown
+
+Add namespaces into the environment
+
+#!csharp
+
+using Microsoft.Identity.Client;
+
+#!markdown
+
+Get Power BI Service access token
+
+#!csharp
+
+var app = PublicClientApplicationBuilder
+    .Create("7f67af8a-fedc-4b08-8b4e-37c4d127b6cf")
+    .WithAuthority("https://login.microsoftonline.com/common/")
+    .WithRedirectUri("http://localhost")
+    .Build();
+
+string[] scopes = new string[] { "https://analysis.windows.net/powerbi/api/.default" };
+
+AuthenticationResult result = app.AcquireTokenInteractive(scopes)
+    .WithUseEmbeddedWebView(false)
+    .ExecuteAsync()
+    .Result;
+
+var accessToken = result.AccessToken;
+
+accessToken
+
+#!markdown
+
+Generate connection string from ***user input window above***
+
+#!csharp
+
+string workspaceName = await GetInputAsync("Enter workspace name");
+string datasetName = await GetInputAsync("Enter dataset name");
+
+if (workspaceName.Trim().ToLower() == "my workspace") { workspaceName = ""; } else { workspaceName = "/" + workspaceName; }
+string connectionString = $"Provider=MSOLAP;Data Source=powerbi://api.powerbi.com/v1.0/myorg{workspaceName.Trim()};initial catalog={datasetName.Trim()};Password={accessToken};";
+
+connectionString.Replace(accessToken, (accessToken.Substring(0, 15) + "..." + accessToken.Substring(accessToken.Length - 15, 15)))
+
+#!markdown
+
+## Using PowerShell
+
+#!markdown
+
 Install/Update PowerShell Power BI Cmdlets
 
 #!pwsh
@@ -76,6 +141,8 @@ Get Power BI Service access token
 Connect-PowerBIServiceAccount
 
 $accessToken = (Get-PowerBIAccessToken -AsString).Split("Bearer ")[1]
+
+$accessToken
 
 #!markdown
 
@@ -103,7 +170,9 @@ Download (if required) and load assemblies into the environment
 
 #!csharp
 
-#r "nuget: Microsoft.AnalysisServices.AdomdClient.NetCore.retail.amd64, 19.52.2.2"
+#r "nuget: Microsoft.Identity.Client"
+// #r "nuget: Microsoft.AnalysisServices.AdomdClient.NetCore.retail.amd64"
+#r "nuget: Microsoft.AnalysisServices.AdomdClient.NetCore.retail.amd64, 19.55.3.1"
 
 #!markdown
 
@@ -122,7 +191,7 @@ Define DAX query to be executed
 
 -- Thank you Darren Gosbell! 😋 (https://daxstudio.org/)
 
-#!html
+#!value
 
 #!value --name queryString
 
@@ -153,7 +222,7 @@ Execute DAX query against Power BI Dataset
 
 #!share --from value queryString
 
-string dtString = " ";
+string dataTableString = " ";
 string columnDelimiter = ", ";
 
 using (AdomdConnection conn = new AdomdConnection())
@@ -165,22 +234,22 @@ using (AdomdConnection conn = new AdomdConnection())
         cmd.CommandText = queryString;
         cmd.Parameters.Add("YearOffset", -2);
         cmd.Connection = conn;
-        using(DataTable dt = new DataTable())
+        using(DataTable dataTable = new DataTable())
         {
-            using(AdomdDataAdapter da = new AdomdDataAdapter(cmd))
+            using(AdomdDataAdapter dataAdapter = new AdomdDataAdapter(cmd))
             {
-                // da.FillSchema(dt, SchemaType.Source); // In case want to manipulate the schema before data load
-                da.Fill(dt);
-                string dtStringHeaders = string.Join(columnDelimiter, dt.Columns.OfType<DataColumn>().Select(x => x.ColumnName));
-                // string dtStringHeaders = string.Join(columnDelimiter, dt.Columns.OfType<DataColumn>().Select(x => Regex.Match(x.ColumnName, @"(?<=\[).+?(?=\])"))); // This version removes full qualification of DAX column names
-                string dtStringRows = string.Join(Environment.NewLine, dt.Rows.OfType<DataRow>().Select(x => string.Join(columnDelimiter, x.ItemArray)));
-                dtString = dtStringHeaders + Environment.NewLine + dtStringRows;
+                // dataAdapter.FillSchema(dataTable, SchemaType.Source); // In case want to manipulate the schema before data load
+                dataAdapter.Fill(dataTable);
+                string dataTableStringHeaders = string.Join(columnDelimiter, dataTable.Columns.OfType<DataColumn>().Select(x => x.ColumnName));
+                // string dataTableStringHeaders = string.Join(columnDelimiter, dataTable.Columns.OfType<DataColumn>().Select(x => Regex.Match(x.ColumnName, @"(?<=\[).+?(?=\])"))); // This version removes full qualification of DAX column names
+                string dataTableStringRows = string.Join(Environment.NewLine, dataTable.Rows.OfType<DataRow>().Select(x => string.Join(columnDelimiter, x.ItemArray)));
+                dataTableString = dataTableStringHeaders + Environment.NewLine + dataTableStringRows;
             }
         }
     }
 }
 
-dtString
+dataTableString
 
 #!markdown
 
@@ -188,14 +257,65 @@ dtString
 
 #!markdown
 
+## Using CSharp
+
+#!markdown
+
+Download (if required) and load assemblies into the environment
+
+#!csharp
+
+#r "nuget: Microsoft.DotNet.Interactive, *-*"
+#r "nuget: Microsoft.DotNet.Interactive.Formatting, *-*"
+#r "nuget: Microsoft.Data.Analysis"
+#r "nuget: Microsoft.ML"
+#r "nuget: DataView.InteractiveExtension"
+#r "nuget: SandDance.InteractiveExtension"
+
+#!markdown
+
+Add namespaces into the environment
+
+#!csharp
+
+using Microsoft.Data.Analysis;
+using Microsoft.ML;
+using SandDance.InteractiveExtension;
+
+#!markdown
+
+Load query results to a data frame
+
+#!csharp
+
+var dataFrame = DataFrame.LoadCsvFromString(dataTableString);
+
+dataFrame
+
+#!markdown
+
+View data frame with SandDance
+
+#!csharp
+
+dataFrame.ToTabularDataResource().ExploreWithSandDance().Display();
+
+#!markdown
+
+## Using FSharp
+
+#!markdown
+
 Download (if required) and load assemblies into the environment
 
 #!fsharp
 
-#r "nuget: Microsoft.Data.Analysis, 0.20.0"
-#r "nuget: Microsoft.ML, 2.0.0"
-#r "nuget: DataView.InteractiveExtension, 1.0.73"
-#r "nuget: SandDance.InteractiveExtension, 1.0.73"
+#r "nuget: Microsoft.DotNet.Interactive, *-*"
+#r "nuget: Microsoft.DotNet.Interactive.Formatting, *-*"
+#r "nuget: Microsoft.Data.Analysis"
+#r "nuget: Microsoft.ML"
+#r "nuget: DataView.InteractiveExtension"
+#r "nuget: SandDance.InteractiveExtension"
 
 #!markdown
 
@@ -213,10 +333,11 @@ Load query results to a data frame
 
 #!fsharp
 
-#!share --from csharp dtString
+#!share --from csharp dataTableString
 
-let df = DataFrame.LoadCsvFromString(dtString)
-df
+let dataFrame = DataFrame.LoadCsvFromString(dataTableString)
+
+dataFrame
 
 #!markdown
 
@@ -224,4 +345,4 @@ View data frame with SandDance
 
 #!fsharp
 
-SandDanceDataExplorer(df.ToTabularDataResource())
+SandDanceDataExplorer(dataFrame.ToTabularDataResource())
