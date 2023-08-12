@@ -45,8 +45,8 @@ Set the workspace and dataset name for the dataset to be refreshed. This also wo
 
 #!pwsh
 
-$workspaceName = "My workspace"
-$datasetName = "My dataset"
+$workspaceName = "My Workspace"
+$datasetName = "My Dataset"
 
 #!markdown
 
@@ -147,11 +147,11 @@ Specify custom refresh parameters and utilise advanced features.
 
 $currentDateTime = (Get-Date -Format yyyy-MM-ddTHH:mm:ss.ffffffZ).ToString() # current local date time as if it was timezone UTC+0, which is the timezone used by Power BI Service
 
-$type = "automatic"                 # full, clearValues, calculate, dataOnly, [automatic], defragment
+$type = "add"                 # full, clearValues, calculate, dataOnly, [automatic], defragment
 $commitMode = "transactional"       # [transactional], partialBatch
 $maxParallelism = $null             # [10]
 $retryCount = $null                 # [0]
-$applyRefreshPolicy = "false"       # [true], false
+$applyRefreshPolicy = "true"       # [true], false
 
 $effectiveDate = $currentDateTime   # uses current server date time (UTC+0) unless specified
 
@@ -162,8 +162,7 @@ $objects = @"
     "objects": [
       {
         "database": "My dataset",
-        "table": "Table1",
-        "partition": "Table1-0d2da98d-6fbf-4b2c-a97c-14e932a23fb6"
+        "table": "Batch Master"
       }
     ]
   }
