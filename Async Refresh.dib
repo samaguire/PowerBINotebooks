@@ -1,3 +1,7 @@
+#!meta
+
+{"kernelInfo":{"defaultKernelName":"csharp","items":[{"aliases":[],"name":"csharp"}]}}
+
 #!markdown
 
 # Microsoft documentation
@@ -79,6 +83,24 @@ Set the refresh options by using a pre-defined collection or by setting custom v
 
 #!markdown
 
+# Clear data
+
+#!markdown
+
+Clears all data in the database.
+
+#!pwsh
+
+$type = "clearValues"
+$commitMode = "transactional"
+$maxParallelism = $null
+$retryCount = $null
+$applyRefreshPolicy = "false"
+$effectiveDate = $null
+$objects = $null
+
+#!markdown
+
 ## Apply refresh policy
 
 #!markdown
@@ -125,8 +147,8 @@ Specify custom refresh parameters and utilise advanced features.
 
 $currentDateTime = (Get-Date -Format yyyy-MM-ddTHH:mm:ss.ffffffZ).ToString() # current local date time as if it was timezone UTC+0, which is the timezone used by Power BI Service
 
-$type = "full"                      # full, clearValues, calculate, dataOnly, [automatic], defragment
-$commitMode = "transactional"        # [transactional], partialBatch
+$type = "automatic"                 # full, clearValues, calculate, dataOnly, [automatic], defragment
+$commitMode = "transactional"       # [transactional], partialBatch
 $maxParallelism = $null             # [10]
 $retryCount = $null                 # [0]
 $applyRefreshPolicy = "false"       # [true], false
