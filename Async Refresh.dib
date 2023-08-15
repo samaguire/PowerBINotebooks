@@ -147,11 +147,11 @@ Specify custom refresh parameters and utilise advanced features.
 
 $currentDateTime = (Get-Date -Format yyyy-MM-ddTHH:mm:ss.ffffffZ).ToString() # current local date time as if it was timezone UTC+0, which is the timezone used by Power BI Service
 
-$type = "add"                 # full, clearValues, calculate, dataOnly, [automatic], defragment
-$commitMode = "transactional"       # [transactional], partialBatch
-$maxParallelism = $null             # [10]
+$type = "full"                      # full, clearValues, calculate, dataOnly, [automatic], defragment
+$commitMode = "partialBatch"        # [transactional], partialBatch
+$maxParallelism = 1                 # [10]
 $retryCount = $null                 # [0]
-$applyRefreshPolicy = "true"       # [true], false
+$applyRefreshPolicy = "false"       # [true], false
 
 $effectiveDate = $currentDateTime   # uses current server date time (UTC+0) unless specified
 
@@ -161,8 +161,8 @@ $objects = @"
     "type": "automatic",
     "objects": [
       {
-        "database": "My dataset",
-        "table": "Batch Master"
+        "database": "My Dataset",
+        "table": "My Table"
       }
     ]
   }
