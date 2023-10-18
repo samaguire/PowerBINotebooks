@@ -149,7 +149,7 @@ $currentDateTime = (Get-Date -Format yyyy-MM-ddTHH:mm:ss.ffffffZ).ToString() # c
 
 $type = "full"                      # full, clearValues, calculate, dataOnly, [automatic], defragment
 $commitMode = "partialBatch"        # [transactional], partialBatch
-$maxParallelism = 1                 # [10]
+$maxParallelism = $null             # [10]
 $retryCount = $null                 # [0]
 $applyRefreshPolicy = "false"       # [true], false
 
@@ -241,7 +241,12 @@ Get the refresh status for the last triggered refresh.
 # $requestId = (Invoke-PowerBIRestMethod -Url "$($groupUrlPart)datasets/$datasetId/refreshes?`$top=1" -Method Get | ConvertFrom-Json).value.requestId
 $body = Invoke-PowerBIRestMethod -Url "$($groupUrlPart)datasets/$datasetId/refreshes/$requestId" -Method Get | ConvertFrom-Json
 $body | Select-Object * -ExcludeProperty "objects"
-$body.objects | Where-Object -Property status -NE "Completed"
+[pscustomobject]@{
+    'Objects Completed' = ($body.objects | Where-Object -Property status -EQ "Completed").Count
+    'Objects InProgress' = ($body.objects | Where-Object -Property status -EQ "InProgress").Count
+    'Objects NotStarted' = ($body.objects | Where-Object -Property status -EQ "NotStarted").Count
+}
+$body.objects | Where-Object -Property status -EQ "InProgress"
 
 #!markdown
 
