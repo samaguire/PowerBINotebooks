@@ -114,7 +114,7 @@ $commitMode = "transactional"
 $maxParallelism = $null
 $retryCount = $null
 $applyRefreshPolicy = "true"
-$effectiveDate = (Get-Date -Format yyyy-MM-ddTHH:mm:ss.ffffffZ).ToString() # current local date time as if it was timezone UTC+0, which is the timezone used by Power BI Service
+$effectiveDate = (Get-Date -Format yyyy-MM-ddTHH:mm:ss.ffffffZ).ToString() # current local date time as if it was timezone UTC+0, which is the timezone used by Power BI Service to save the RefreshBookmark property
 $objects = $null
 
 #!markdown
@@ -145,7 +145,7 @@ Specify custom refresh parameters and utilise advanced features.
 
 #!pwsh
 
-$currentDateTime = (Get-Date -Format yyyy-MM-ddTHH:mm:ss.ffffffZ).ToString() # current local date time as if it was timezone UTC+0, which is the timezone used by Power BI Service
+$currentDateTime = (Get-Date -Format yyyy-MM-ddTHH:mm:ss.ffffffZ).ToString() # current local date time as if it was timezone UTC+0, which is the timezone used by Power BI Service to save the RefreshBookmark property
 
 $type = "full"                      # full, clearValues, calculate, dataOnly, [automatic], defragment
 $commitMode = "partialBatch"        # [transactional], partialBatch
